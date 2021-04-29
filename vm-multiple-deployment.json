@@ -1,0 +1,128 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "VnetResourceGroup": {
+        "type": "string",
+        "defaultValue": "shared-vnet"
+      },
+      "virtualNetworkId": {
+        "type": "string",
+        "defaultValue": "/subscriptions/0823cfa7-7814-434b-abf9-655be3324067/resourceGroups/shared-vnet/providers/Microsoft.Network/virtualNetworks/vnetuks005"
+      },
+      "subnetName": {
+        "type": "string",
+        "defaultValue": "vnetuks005_10.59.0.64_27"
+      },
+      "osDiskType": {
+        "type": "string",
+        "defaultValue": "StandardSSD_LRS"
+      },
+      "patchMode": {
+        "type": "string",
+        "defaultValue": "AutomaticByOS"
+      },
+      "virtualMachineSize": {
+        "type": "string",
+        "defaultValue": "Standard_B2ms"
+      },
+      "AdminUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "Admin username for VM"
+        }
+      },
+      "AdminPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "Admin password for VM"
+        }
+      },
+      "VMNames": {
+        "type": "array",
+        "metadata": {
+          "description": "Number of VMs to deploy, limit 5 since this sample is using a single storage account"
+        }
+      }
+    },
+    "variables": {
+      "vnetId": "[parameters('virtualNetworkId')]",
+      "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Network/networkInterfaces",
+        "name": "[concat(parameters('VMNames')[copyIndex()], '-nic')]",
+        "apiVersion": "2018-10-01",
+        "location": "[resourceGroup().location]",
+        "copy": {
+          "name": "nicLoop",
+          "count": "[length(parameters('VMNames'))]"
+        },
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig1",
+              "properties": {
+                "subnet": {
+                  "id": "[variables('subnetRef')]"
+                },
+                "privateIPAllocationMethod": "Dynamic"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Microsoft.Compute/virtualMachines",
+        "name": "[parameters('VMNames')[copyIndex()]]",
+        "apiVersion": "2020-12-01",
+        "location": "[resourceGroup().location]",
+        "copy": {
+          "name": "virtualMachineLoop",
+          "count": "[length(parameters('VMNames'))]"
+        },
+        "dependsOn": [
+          "nicLoop"
+        ],
+        "properties": {
+          "hardwareProfile": {
+            "vmSize": "[parameters('virtualMachineSize')]"
+          },
+          "osProfile": {
+            "computerName": "[parameters('VMNames')[copyIndex()]]",
+            "adminUsername": "[parameters('AdminUsername')]",
+            "adminPassword": "[parameters('AdminPassword')]",
+            "windowsConfiguration": {
+              "enableAutomaticUpdates": true,
+              "provisionVmAgent": true,
+              "patchSettings": {
+                "patchMode": "[parameters('patchMode')]"
+              }
+            }
+          },
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "fromImage",
+              "managedDisk": {
+                "storageAccountType": "[parameters('osDiskType')]"
+              }
+            },
+            "imageReference": {
+              "publisher": "MicrosoftWindowsServer",
+              "offer": "WindowsServer",
+              "sku": "2019-Datacenter",
+              "version": "latest"
+            }
+          },
+          "networkProfile": {
+            "networkInterfaces": [
+              {
+                "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('VMNames')[copyIndex()], '-nic'))]"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
