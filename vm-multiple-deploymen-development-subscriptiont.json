@@ -4,15 +4,15 @@
     "parameters": {
       "VnetResourceGroup": {
         "type": "string",
-        "defaultValue": "shared-vnet"
+        "defaultValue": "development-vnet"
       },
       "virtualNetworkId": {
         "type": "string",
-        "defaultValue": "/subscriptions/0823cfa7-7814-434b-abf9-655be3324067/resourceGroups/shared-vnet/providers/Microsoft.Network/virtualNetworks/vnetuks005"
+        "defaultValue": "/subscriptions/a633a68d-0c2a-4416-a49e-51aceae00821/resourceGroups/development-vnet/providers/Microsoft.Network/virtualNetworks/vnetuks006"
       },
       "subnetName": {
         "type": "string",
-        "defaultValue": "vnetuks005_10.59.0.64_27"
+        "defaultValue": "vnetuks006_10.60.255.32_27"
       },
       "osDiskType": {
         "type": "string",
